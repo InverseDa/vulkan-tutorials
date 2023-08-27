@@ -102,7 +102,7 @@ class TriangleApplication {
         createInfo.enabledExtensionCount   = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
         if (enableValidationLayers) {
             createInfo.enabledLayerCount   = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data(); // 指向校验层名称的指针
