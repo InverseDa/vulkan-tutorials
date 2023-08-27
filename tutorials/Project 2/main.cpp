@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <vcruntime.h>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -18,6 +19,7 @@ const int HEIGHT = 600;
 // 要启用的校验层，自己定义
 const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
+// 创建错误消息回调
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
                                       const VkAllocationCallbacks* pAllocator,
@@ -30,6 +32,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
     }
 }
 
+// 析构错误消息回调
 void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks* pAllocator) {
@@ -99,57 +102,43 @@ class TriangleApplication {
         createInfo.enabledExtensionCount   = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
         if (enableValidationLayers) {
             createInfo.enabledLayerCount   = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data(); // 指向校验层名称的指针
+            populateDebugMessengerCreateInfo(debugCreateInfo);
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
         } else {
             createInfo.enabledLayerCount = 0;
+            createInfo.pNext             = nullptr;
         }
-
-        // 绑定到glfw窗口
-        unsigned int glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        createInfo.enabledExtensionCount   = glfwExtensionCount;
-        createInfo.ppEnabledExtensionNames = glfwExtensions;
-
-        createInfo.enabledLayerCount = 0;
 
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
             throw std::runtime_error("failed to create instance!");
         }
     }
 
-    void setupDebugMessenger() {
-        if (!enableValidationLayers) return;
-        VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
-        createInfo.sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT; // 指定结构体类型
-        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | // 指定消息的严重程度
+    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+        createInfo                 = {};
+        createInfo.sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
                                      VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
                                      VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | // 指定消息的类型
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
                                  VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        createInfo.pfnUserCallback = debugCallback; // 指定消息回调函数
-        createInfo.pUserData       = nullptr;       // 指定用户自定义数据
+        createInfo.pfnUserCallback = debugCallback;
+    }
+
+    void setupDebugMessenger() {
+        if (!enableValidationLayers) return;
+
+        VkDebugUtilsMessengerCreateInfoEXT createInfo;
+        populateDebugMessengerCreateInfo(createInfo);
 
         if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
             throw std::runtime_error("failed to set up debug messenger!");
         }
-    }
-
-    void pickPhysicalDevice() {}
-
-    // 校验层报错的回调函数显示报错信息
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,    // 消息的严重程度
-        VkDebugUtilsMessageTypeFlagsEXT messageType,               // 消息的类型
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, // 消息的详细信息
-        void* pUserData                                            // 用户自定义数据
-    ) {
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-        return VK_FALSE;
     }
 
     // 请求指定的校验层
@@ -183,6 +172,17 @@ class TriangleApplication {
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
         if (enableValidationLayers) { extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); }
         return extensions;
+    }
+
+    // 校验层报错的回调函数显示报错信息
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,    // 消息的严重程度
+        VkDebugUtilsMessageTypeFlagsEXT messageType,               // 消息的类型
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, // 消息的详细信息
+        void* pUserData                                            // 用户自定义数据
+    ) {
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        return VK_FALSE;
     }
 };
 
