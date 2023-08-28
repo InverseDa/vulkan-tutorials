@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.26)
+project(tutorial_03_03_render_passes)
+add_executable(tutorial_03_03_render_passes main.cpp)
+
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(unofficial-shaderc CONFIG REQUIRED)
+target_link_libraries(tutorial_03_03_render_passes Vulkan::Vulkan)
+target_link_libraries(tutorial_03_03_render_passes glfw)
+target_link_libraries(tutorial_03_03_render_passes unofficial::shaderc::shaderc)

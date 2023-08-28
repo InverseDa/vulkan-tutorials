@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.26)
+project(tutorial_04_01_framebuffers)
+add_executable(tutorial_04_01_framebuffers main.cpp)
+
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(unofficial-shaderc CONFIG REQUIRED)
+target_link_libraries(tutorial_04_01_framebuffers Vulkan::Vulkan)
+target_link_libraries(tutorial_04_01_framebuffers glfw)
+target_link_libraries(tutorial_04_01_framebuffers unofficial::shaderc::shaderc)

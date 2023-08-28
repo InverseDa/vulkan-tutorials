@@ -4,5 +4,7 @@ add_executable(tutorial_03_01_pipline_shader main.cpp)
 
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(unofficial-shaderc CONFIG REQUIRED)
 target_link_libraries(tutorial_03_01_pipline_shader Vulkan::Vulkan)
 target_link_libraries(tutorial_03_01_pipline_shader glfw)
+target_link_libraries(tutorial_03_01_pipline_shader unofficial::shaderc::shaderc)

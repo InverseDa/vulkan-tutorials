@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.26)
+project(tutorial_03_02_fixed_functions)
+add_executable(tutorial_03_02_fixed_functions main.cpp)
+
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(unofficial-shaderc CONFIG REQUIRED)
+target_link_libraries(tutorial_03_02_fixed_functions Vulkan::Vulkan)
+target_link_libraries(tutorial_03_02_fixed_functions glfw)
+target_link_libraries(tutorial_03_02_fixed_functions unofficial::shaderc::shaderc)
