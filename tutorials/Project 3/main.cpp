@@ -1,13 +1,16 @@
-// 显卡
+// 物理设备选取和队列族
 #define GLFW_INCLUDE_VULKAN
-#define NORMAL_PICK_MODE 1
+// #define NORMAL_PICK_MODE 0
 // #define RATE_PICK_MODE   0
+#define QUEUE_PICK_MODE 1
 
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <stdexcept>
+#include <stdint.h>
 #include <vcruntime.h>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -45,6 +48,12 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
     if (func != nullptr) { func(instance, debugMessenger, pAllocator); }
 }
 
+struct QueueFamilyIndices {
+    // 用optional来表示是否有值
+    std::optional<uint32_t> graphicsFamily; // 图形队列族
+    bool isComplete() { return graphicsFamily.has_value(); }
+};
+
 class TriangleApplication {
   public:
     void run() {
@@ -58,6 +67,7 @@ class TriangleApplication {
     GLFWwindow* window;
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
     void initVulkan() {
         createInstance();
@@ -124,10 +134,26 @@ class TriangleApplication {
         }
     }
 
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+        QueueFamilyIndices indices;
+        uint32_t queueFamilyCount = 0;
+        // 队列族数量
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr); // 获取队列族数量
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);         // 队列族属性
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        int i = 0;
+        for (const auto& queueFamiliy : queueFamilies) {
+            if (queueFamiliy.queueFlags & VK_QUEUE_GRAPHICS_BIT) { indices.graphicsFamily = i; }
+            i++;
+        }
+        return indices;
+    }
+
     void pickPhysicalDevice() {
-        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-        uint32_t deviceCount            = 0;
+        uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
         if (deviceCount == 0) { throw std::runtime_error("failed to find GPUs with Vulkan support!"); }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -178,6 +204,20 @@ class TriangleApplication {
         } else {
             throw std::runtime_error("failed to find a suitable GPU!");
         }
+#elif QUEUE_PICK_MODE
+        auto isDeviceSuitable = [&](VkPhysicalDevice device) {
+            QueueFamilyIndices indices = findQueueFamilies(device);
+            return indices.isComplete();
+        };
+
+        for (const auto& device : devices) {
+            if (isDeviceSuitable(device)) {
+                physicalDevice = device;
+                break;
+            }
+        }
+
+        if (physicalDevice == VK_NULL_HANDLE) { throw std::runtime_error("failed to find a suitable GPU!"); }
 #endif
     }
 

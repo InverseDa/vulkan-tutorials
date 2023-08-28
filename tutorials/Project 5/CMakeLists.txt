@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.26)
+project(tutorial_02_05_window_surface)
+add_executable(tutorial_02_05_window_surface main.cpp)
+
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+target_link_libraries(tutorial_02_05_window_surface Vulkan::Vulkan)
+target_link_libraries(tutorial_02_05_window_surface glfw)

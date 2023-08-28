@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.26)
-project(tutorial_04)
-add_executable(tutorial_04 main.cpp)
+project(tutorial_01_04_logic_device_and_queues)
+add_executable(tutorial_01_04_logic_device_and_queues main.cpp)
 
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
-target_link_libraries(tutorial_04 Vulkan::Vulkan)
-target_link_libraries(tutorial_04 glfw)
+target_link_libraries(tutorial_01_04_logic_device_and_queues Vulkan::Vulkan)
+target_link_libraries(tutorial_01_04_logic_device_and_queues glfw)
