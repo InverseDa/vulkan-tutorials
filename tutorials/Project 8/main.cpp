@@ -1,5 +1,6 @@
 // 章节3：渲染管线 —— Shader Modules
 
+#include "shaderc/shaderc.h"
 #define GLFW_INCLUDE_VULKAN
 // #define NORMAL_PICK_MODE 0
 // #define RATE_PICK_MODE   0
@@ -141,6 +142,7 @@ class TriangleApplication {
         createLogicalDevice();
         createSwapChain();
         createImageViews();
+        createGraphicsPipeline();
     }
 
     void initWindow() {
@@ -535,6 +537,34 @@ class TriangleApplication {
         vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
         vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
     }
+
+    // ==================================== 以下是渲染管线 ====================================
+
+    VkShaderModule createShaderModule(const std::vector<uint32_t>& code) {
+        VkShaderModuleCreateInfo createInfo = {};
+        createInfo.sType                    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize                 = code.size();
+        createInfo.pCode                    = code.data();
+        VkShaderModule shaderModule;
+        if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create shader module!");
+        }
+        return shaderModule;
+    }
+
+    void createGraphicsPipeline() {
+        std::vector<uint32_t> vertSpirvCode, fragSpirvCode;
+        if (!compileShader("shaders/triangle.vert", shaderc_glsl_vertex_shader, vertSpirvCode)) {
+            throw std::runtime_error("failed to compile vertex shader!");
+        }
+        if (!compileShader("shader/triangle.frag", shaderc_glsl_fragment_shader, fragSpirvCode)) {
+            throw std::runtime_error("failed to compile fragment shader!");
+        }
+        VkShaderModule vertShaderModule = createShaderModule(vertSpirvCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragSpirvCode);
+    }
+
+    // ==================================== 以下是校验层的辅助函数 ====================================
 
     // 请求指定的校验层
     bool checkValidationLayerSupport() {
