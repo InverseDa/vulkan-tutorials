@@ -8,10 +8,14 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <optional>
 #include <set>
+#include <shaderc/shaderc.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <stdint.h>
 #include <vcruntime.h>
@@ -51,6 +55,40 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    const VkAllocationCallbacks* pAllocator) {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) { func(instance, debugMessenger, pAllocator); }
+}
+
+// 着色器编译成SPIR-V字节码
+bool compileShader(const std::string& shaderPath, shaderc_shader_kind shaderKind, std::vector<uint32_t>& spirvCode) {
+    // 读取着色器文件
+    std::string shaderAbsolutePath = std::filesystem::absolute(shaderPath).string();
+    std::ifstream shaderFile;
+    std::string shaderCode;
+    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try {
+        shaderFile.open(shaderAbsolutePath);
+        std::stringstream shaderStream;
+        shaderStream << shaderFile.rdbuf();
+        shaderFile.close();
+        shaderCode = shaderStream.str();
+    } catch (std::ifstream::failure e) {
+        throw std::runtime_error("failed to open shader file: " + shaderAbsolutePath);
+    }
+
+    shaderc::Compiler compiler;
+    shaderc::CompileOptions options;
+
+    // 编译选项
+    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+    // 编译着色器
+    shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(shaderCode, shaderKind, "shader", options);
+    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+        std::cout << result.GetErrorMessage() << std::endl;
+        return false;
+    }
+
+    // 将SPIR-V字节码存储到输出向量
+    spirvCode = { result.cbegin(), result.cend() };
+    return true;
 }
 
 struct QueueFamilyIndices {
