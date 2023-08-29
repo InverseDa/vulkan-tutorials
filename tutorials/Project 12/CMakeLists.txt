@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.26)
+project(tutorial_04_02_rendering_and_presentation)
+add_executable(tutorial_04_02_rendering_and_presentation main.cpp)
+
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(unofficial-shaderc CONFIG REQUIRED)
+target_link_libraries(tutorial_04_02_rendering_and_presentation Vulkan::Vulkan)
+target_link_libraries(tutorial_04_02_rendering_and_presentation glfw)
+target_link_libraries(tutorial_04_02_rendering_and_presentation unofficial::shaderc::shaderc)
