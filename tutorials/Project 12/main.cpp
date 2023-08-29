@@ -1,6 +1,5 @@
 // 章节4：绘制 —— Framebuffers和Command Buffers
 
-#include "vulkan/vulkan_core.h"
 #define GLFW_INCLUDE_VULKAN
 // #define NORMAL_PICK_MODE 0
 // #define RATE_PICK_MODE   0
